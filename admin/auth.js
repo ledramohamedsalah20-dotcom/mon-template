@@ -5,7 +5,7 @@
  */
 
 // Email autorisé pour créer un compte admin
-const ADMIN_EMAIL = 'mohsxxxx@gmail.com';
+const ADMIN_EMAIL = 'mohs49850@gmail.com';
 
 // Clés de stockage
 const KEYS = {
