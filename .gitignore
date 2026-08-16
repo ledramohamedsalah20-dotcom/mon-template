@@ -10,3 +10,5 @@ desktop.ini
 
 # Fichiers système Mac
 .DS_Store
+# Local Netlify folder
+.netlify

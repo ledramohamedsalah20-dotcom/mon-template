@@ -3,181 +3,190 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title id="site-title">Mon Produit</title>
-
-  <!-- Style -->
-  <link rel="stylesheet" href="style.css" />
+  <title id="site-title">Produit</title>
 
   <!-- Meta Pixel -->
   <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
+    !function(f,b,e,v,n,t,s){
+      if(f.fbq)return;n=f.fbq=function(){
+        n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)
+      };
+      if(!f._fbq)f._fbq=n;
+      n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)
+    }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
     fbq('init', window.PIXEL_ID || 'VOTRE_PIXEL_ID');
     fbq('track', 'PageView');
   </script>
   <noscript>
     <img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=VOTRE_PIXEL_ID&ev=PageView&noscript=1"/>
+      src="https://www.facebook.com/tr?id=VOTRE_PIXEL_ID&ev=PageView&noscript=1" alt="" />
   </noscript>
-</head>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
 <body>
 
   <!-- ═══════════════════════════════════
-       BANNIÈRE PROMO (affichée si active)
+       PAGE PRINCIPALE
   ════════════════════════════════════ -->
-  <div id="banniere" class="banniere hidden">
-    <span id="banniere-texte">🚚 Livraison gratuite !</span>
+  <div id="page-principale" class="lp-wrapper">
+
+    <!-- Galerie produit -->
+    <div class="gallery">
+      <div class="gallery-main">
+        <img id="gallery-main-img" src="" alt="" />
+      </div>
+      <div id="gallery-thumbs" class="gallery-thumbs"></div>
+    </div>
+
+    <div class="lp-container">
+
+      <!-- Informations produit -->
+      <section class="product-info">
+        <h1 id="product-name" class="product-name"></h1>
+        <p id="product-tagline" class="product-tagline"></p>
+        <p id="product-price" class="product-price"></p>
+        <div id="product-description" class="product-description"></div>
+        <span class="payment-badge">Paiement a la livraison</span>
+      </section>
+
+      <!-- Formulaire de commande -->
+      <section class="order-section">
+        <h2>Commander</h2>
+
+        <form id="formulaire" novalidate>
+
+          <!-- Honeypot anti-bot -->
+          <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" />
+
+          <div class="form-grid">
+
+            <!-- Prenom -->
+            <div class="field">
+              <label for="champ-prenom">Prenom</label>
+              <input
+                id="champ-prenom"
+                name="prenom"
+                type="text"
+                autocomplete="given-name"
+                placeholder="Votre prenom"
+                required
+              />
+            </div>
+
+            <!-- Nom -->
+            <div class="field">
+              <label for="champ-nom">Nom</label>
+              <input
+                id="champ-nom"
+                name="nom"
+                type="text"
+                autocomplete="family-name"
+                placeholder="Votre nom"
+                required
+              />
+            </div>
+
+            <!-- Telephone -->
+            <div class="field full">
+              <label for="champ-telephone">Numero de telephone</label>
+              <input
+                id="champ-telephone"
+                name="telephone"
+                type="tel"
+                autocomplete="tel"
+                placeholder="05 XX XX XX XX"
+                required
+              />
+            </div>
+
+            <!-- Wilaya -->
+            <div class="field full">
+              <label for="champ-wilaya">Wilaya de livraison</label>
+              <select id="champ-wilaya" name="wilaya" required>
+                <option value="">Selectionnez votre wilaya</option>
+              </select>
+            </div>
+
+            <!-- Quantite -->
+            <div class="field">
+              <label>Quantite</label>
+              <div class="qty-field">
+                <button type="button" class="qty-btn" id="btn-moins">-</button>
+                <input
+                  id="champ-quantite"
+                  name="quantite"
+                  type="number"
+                  min="1"
+                  value="1"
+                  readonly
+                />
+                <button type="button" class="qty-btn" id="btn-plus">+</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Recapitulatif -->
+          <div id="order-summary" class="order-summary" style="display:none">
+            <div class="summary-row">
+              <span id="recap-produit-label">Produit</span>
+              <span id="recap-produit-val"></span>
+            </div>
+            <div class="summary-row">
+              <span>Quantite</span>
+              <span id="recap-qty-val">1</span>
+            </div>
+            <div class="summary-row">
+              <span>Livraison</span>
+              <span id="recap-livraison-val"></span>
+            </div>
+            <div class="summary-row total">
+              <span>Total a payer</span>
+              <span id="recap-total-val"></span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit" id="btn-submit">
+            Valider la commande
+          </button>
+
+          <p class="delivery-note">
+            Paiement a la livraison — aucun paiement en ligne requis
+          </p>
+
+        </form>
+      </section>
+
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════
-       HEADER
+       PAGE CONFIRMATION
   ════════════════════════════════════ -->
-  <header class="header">
-    <div class="container">
-      <div class="logo-wrapper">
-        <img id="site-logo" src="" alt="Logo" class="logo hidden" />
-        <span id="site-nom" class="site-nom">Mon Site</span>
+  <div id="page-confirmation" class="confirmation-screen" style="display:none">
+    <div class="confirmation-card">
+      <div class="confirmation-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
       </div>
+      <h2>Commande enregistree</h2>
+      <p>
+        Merci <strong id="conf-prenom"></strong>. Nous vous contacterons
+        au <strong id="conf-telephone"></strong> dans les plus brefs
+        delais pour confirmer votre commande.
+      </p>
     </div>
-  </header>
+  </div>
 
-  <!-- ═══════════════════════════════════
-       HERO — Produit principal
-  ════════════════════════════════════ -->
-  <section class="hero">
-    <div class="container hero-grid">
-
-      <!-- Images produit -->
-      <div class="hero-images">
-        <img id="produit-image-principale" src="" alt="Produit" class="image-principale" />
-        <div id="galerie" class="galerie"></div>
-      </div>
-
-      <!-- Infos produit -->
-      <div class="hero-info">
-        <span id="produit-badge" class="badge hidden">Nouveauté</span>
-        <h1 id="produit-nom">Nom du produit</h1>
-        <p id="produit-description">Description du produit...</p>
-
-        <!-- Prix -->
-        <div class="prix-wrapper">
-          <span id="produit-prix-promo" class="prix-promo hidden">0 DA</span>
-          <span id="produit-prix" class="prix">0 DA</span>
-        </div>
-
-        <!-- Quantité -->
-        <div class="quantite-wrapper">
-          <button class="btn-qty" onclick="changerQty(-1)">−</button>
-          <span id="quantite">1</span>
-          <button class="btn-qty" onclick="changerQty(1)">+</button>
-        </div>
-
-        <!-- Bouton commander -->
-        <button class="btn-commander" onclick="scrollFormulaire()">
-          🛒 Commander maintenant
-        </button>
-
-        <!-- Garanties -->
-        <div class="garanties">
-          <span>✅ Paiement à la livraison</span>
-          <span>🚚 Livraison partout en Algérie</span>
-          <span>🔄 Retour sous 7 jours</span>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ═══════════════════════════════════
-       FORMULAIRE DE COMMANDE
-  ════════════════════════════════════ -->
-  <section class="section-formulaire" id="formulaire-section">
-    <div class="container">
-      <h2>Passer votre commande</h2>
-
-      <form id="formulaire" onsubmit="soumettreCommande(event)">
-
-        <!-- Honeypot anti-bot (invisible) -->
-        <input type="text" name="website" class="honeypot" tabindex="-1" autocomplete="off" />
-
-        <div class="form-group">
-          <label>Nom complet *</label>
-          <input type="text" id="nom" placeholder="Votre nom" required />
-        </div>
-
-        <div class="form-group">
-          <label>Numéro de téléphone *</label>
-          <input type="tel" id="telephone" placeholder="05XXXXXXXX" required />
-        </div>
-
-        <div class="form-group">
-          <label>Wilaya *</label>
-          <select id="wilaya" required>
-            <option value="">-- Choisir votre wilaya --</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Adresse</label>
-          <input type="text" id="adresse" placeholder="Votre adresse (optionnel)" />
-        </div>
-
-        <!-- Récapitulatif -->
-        <div class="recap">
-          <div class="recap-ligne">
-            <span>Produit</span>
-            <span id="recap-produit">—</span>
-          </div>
-          <div class="recap-ligne">
-            <span>Quantité</span>
-            <span id="recap-qty">1</span>
-          </div>
-          <div class="recap-ligne">
-            <span>Livraison</span>
-            <span id="recap-livraison">—</span>
-          </div>
-          <div class="recap-ligne total">
-            <span>Total</span>
-            <span id="recap-total">—</span>
-          </div>
-        </div>
-
-        <button type="submit" class="btn-submit">
-          ✅ Confirmer ma commande
-        </button>
-
-      </form>
-
-      <!-- Message de confirmation -->
-      <div id="confirmation" class="confirmation hidden">
-        <div class="confirmation-box">
-          <h2>🎉 Commande confirmée !</h2>
-          <p>Merci <strong id="conf-nom"></strong> !</p>
-          <p>On vous contacte sous <strong>24h</strong> pour confirmer votre livraison.</p>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ═══════════════════════════════════
-       FOOTER
-  ════════════════════════════════════ -->
-  <footer class="footer">
-    <div class="container">
-      <p id="footer-texte">© 2026 Mon Site. Tous droits réservés.</p>
-    </div>
-  </footer>
-
-  <!-- Script principal -->
   <script src="script.js"defer></script>
-
 </body>
 </html>

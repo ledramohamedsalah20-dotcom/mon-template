@@ -1,150 +1,133 @@
-// ═══════════════════════════════════════
-// CHARGEMENT DES DONNÉES DEPUIS settings.json
-// ═══════════════════════════════════════
+// ================================================================
+// DONNÉES
+// ================================================================
 
 let SETTINGS = {};
-let PRODUIT = {};
+let PRODUIT  = {};
 let quantite = 1;
 
-async function chargerSettings() {
+async function chargerDonnees() {
   try {
-    const res = await fetch('/content/settings.json');
-    SETTINGS = await res.json();
-    appliquerSettings();
+    const [resSettings, resProduit] = await Promise.all([
+      fetch('/content/settings.json'),
+      fetch('/content/produits/produit-1.json')
+    ]);
+    SETTINGS = await resSettings.json();
+    PRODUIT  = await resProduit.json();
   } catch (e) {
-    console.log('settings.json non trouvé, valeurs par défaut');
+    console.warn('Erreur chargement données', e);
   }
+
+  appliquerSettings();
+  appliquerProduit();
+  chargerWilayas();
+  bindEvents();
 }
 
-async function chargerProduit() {
-  try {
-    const res = await fetch('/content/produits/produit-1.json');
-    PRODUIT = await res.json();
-    appliquerProduit();
-  } catch (e) {
-    console.log('produit-1.json non trouvé, valeurs par défaut');
-  }
-}
-
-// ═══════════════════════════════════════
-// APPLIQUER SETTINGS AU SITE
-// ═══════════════════════════════════════
+// ================================================================
+// SETTINGS
+// ================================================================
 
 function appliquerSettings() {
-
-  // Pixel ID
   if (SETTINGS.pixel_id) {
     window.PIXEL_ID = SETTINGS.pixel_id;
     fbq('init', SETTINGS.pixel_id);
   }
 
-  // Couleur principale
-  if (SETTINGS.couleur_principale) {
-    document.documentElement.style.setProperty(
-      '--couleur-principale', SETTINGS.couleur_principale
-    );
-  }
-
-  // Couleur secondaire
-  if (SETTINGS.couleur_secondaire) {
-    document.documentElement.style.setProperty(
-      '--couleur-secondaire', SETTINGS.couleur_secondaire
-    );
-  }
-
-  // Logo
-  if (SETTINGS.logo) {
-    const logo = document.getElementById('site-logo');
-    logo.src = SETTINGS.logo;
-    logo.classList.remove('hidden');
-  }
-
-  // Nom du site
   if (SETTINGS.nom_site) {
-    document.getElementById('site-nom').textContent = SETTINGS.nom_site;
     document.getElementById('site-title').textContent = SETTINGS.nom_site;
   }
-
-  // Bannière
-  if (SETTINGS.banniere_active && SETTINGS.banniere_texte) {
-    const banniere = document.getElementById('banniere');
-    document.getElementById('banniere-texte').textContent = SETTINGS.banniere_texte;
-    banniere.classList.remove('hidden');
-  }
-
-  // Footer
-  if (SETTINGS.footer_texte) {
-    document.getElementById('footer-texte').textContent = SETTINGS.footer_texte;
-  }
-
-  // Wilayas + tarifs livraison
-  chargerWilayas();
 }
 
-// ═══════════════════════════════════════
-// APPLIQUER PRODUIT AU SITE
-// ═══════════════════════════════════════
+// ================================================================
+// PRODUIT
+// ================================================================
 
 function appliquerProduit() {
-
   // Nom
-  if (PRODUIT.nom) {
-    document.getElementById('produit-nom').textContent = PRODUIT.nom;
-    document.getElementById('recap-produit').textContent = PRODUIT.nom;
-  }
+  const nom = PRODUIT.nom || '';
+  document.getElementById('product-name').textContent = nom;
+  document.getElementById('recap-produit-label').textContent = nom;
 
-  // Description
-  if (PRODUIT.description) {
-    document.getElementById('produit-description').textContent = PRODUIT.description;
+  // Accroche
+  if (PRODUIT.accroche) {
+    document.getElementById('product-tagline').textContent = PRODUIT.accroche;
   }
 
   // Prix
-  if (PRODUIT.prix) {
-    document.getElementById('produit-prix').textContent = PRODUIT.prix + ' DA';
-  }
+  const prix = getPrixFinal();
+  document.getElementById('product-price').textContent =
+    prix.toLocaleString('fr-DZ') + ' DA';
 
-  // Prix promo
-  if (PRODUIT.prix_promo) {
-    const el = document.getElementById('produit-prix-promo');
-    el.textContent = PRODUIT.prix + ' DA';
-    document.getElementById('produit-prix').textContent = PRODUIT.prix_promo + ' DA';
-    el.classList.remove('hidden');
-  }
-
-  // Badge
-  if (PRODUIT.badge) {
-    const badge = document.getElementById('produit-badge');
-    badge.textContent = PRODUIT.badge;
-    badge.classList.remove('hidden');
-  }
-
-  // Image principale
-  if (PRODUIT.images && PRODUIT.images.length > 0) {
-    document.getElementById('produit-image-principale').src = PRODUIT.images[0];
-
-    // Galerie
-    const galerie = document.getElementById('galerie');
-    PRODUIT.images.forEach((img, index) => {
-      const el = document.createElement('img');
-      el.src = img;
-      el.alt = 'Photo ' + (index + 1);
-      if (index === 0) el.classList.add('active');
-      el.onclick = () => {
-        document.getElementById('produit-image-principale').src = img;
-        document.querySelectorAll('.galerie img').forEach(i => i.classList.remove('active'));
-        el.classList.add('active');
-      };
-      galerie.appendChild(el);
+  // Description
+  if (PRODUIT.description) {
+    const el = document.getElementById('product-description');
+    PRODUIT.description.split('\n').forEach(ligne => {
+      if (!ligne.trim()) return;
+      const p = document.createElement('p');
+      p.textContent = ligne;
+      el.appendChild(p);
     });
   }
 
-  // Recap
-  mettreAJourRecap();
+  // Galerie
+  if (PRODUIT.images && PRODUIT.images.length > 0) {
+    const mainImg   = document.getElementById('gallery-main-img');
+    const thumbsEl  = document.getElementById('gallery-thumbs');
+
+    mainImg.src = PRODUIT.images[0];
+    mainImg.alt = nom;
+
+    PRODUIT.images.forEach((src, i) => {
+      const btn = document.createElement('button');
+      btn.type      = 'button';
+      btn.className = 'thumb-btn' + (i === 0 ? ' active' : '');
+
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = nom + ' ' + (i + 1);
+
+      btn.appendChild(img);
+      btn.addEventListener('click', () => {
+        mainImg.style.opacity = '0';
+        setTimeout(() => {
+          mainImg.src           = src;
+          mainImg.style.opacity = '1';
+        }, 150);
+        document.querySelectorAll('.thumb-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+
+      thumbsEl.appendChild(btn);
+    });
+  }
+
+  // Recap produit valeur initiale
+  document.getElementById('recap-produit-val').textContent =
+    getPrixFinal().toLocaleString('fr-DZ') + ' DA';
+  document.getElementById('recap-qty-val').textContent = 1;
 }
 
-// ═══════════════════════════════════════
-// 58 WILAYAS D'ALGÉRIE
-// ═══════════════════════════════════════
+// ================================================================
+// PRIX
+// ================================================================
+
+function getPrixFinal() {
+  if (PRODUIT.prix_promo && PRODUIT.prix_promo > 0) return parseInt(PRODUIT.prix_promo);
+  if (PRODUIT.prix) return parseInt(PRODUIT.prix);
+  return 0;
+}
+
+function getLivraison(wilaya) {
+  if (!SETTINGS.tarifs_livraison) return 0;
+  return SETTINGS.tarifs_livraison[wilaya]
+      ?? SETTINGS.tarifs_livraison['defaut']
+      ?? 0;
+}
+
+// ================================================================
+// WILAYAS
+// ================================================================
 
 const WILAYAS = [
   { code: '01', nom: 'Adrar' },
@@ -152,36 +135,36 @@ const WILAYAS = [
   { code: '03', nom: 'Laghouat' },
   { code: '04', nom: 'Oum El Bouaghi' },
   { code: '05', nom: 'Batna' },
-  { code: '06', nom: 'Béjaïa' },
+  { code: '06', nom: 'Bejaia' },
   { code: '07', nom: 'Biskra' },
-  { code: '08', nom: 'Béchar' },
+  { code: '08', nom: 'Bechar' },
   { code: '09', nom: 'Blida' },
   { code: '10', nom: 'Bouira' },
   { code: '11', nom: 'Tamanrasset' },
-  { code: '12', nom: 'Tébessa' },
+  { code: '12', nom: 'Tebessa' },
   { code: '13', nom: 'Tlemcen' },
   { code: '14', nom: 'Tiaret' },
   { code: '15', nom: 'Tizi Ouzou' },
   { code: '16', nom: 'Alger' },
   { code: '17', nom: 'Djelfa' },
   { code: '18', nom: 'Jijel' },
-  { code: '19', nom: 'Sétif' },
-  { code: '20', nom: 'Saïda' },
+  { code: '19', nom: 'Setif' },
+  { code: '20', nom: 'Saida' },
   { code: '21', nom: 'Skikda' },
-  { code: '22', nom: 'Sidi Bel Abbès' },
+  { code: '22', nom: 'Sidi Bel Abbes' },
   { code: '23', nom: 'Annaba' },
   { code: '24', nom: 'Guelma' },
   { code: '25', nom: 'Constantine' },
-  { code: '26', nom: 'Médéa' },
+  { code: '26', nom: 'Medea' },
   { code: '27', nom: 'Mostaganem' },
-  { code: '28', nom: 'M\'Sila' },
+  { code: '28', nom: 'MSila' },
   { code: '29', nom: 'Mascara' },
   { code: '30', nom: 'Ouargla' },
   { code: '31', nom: 'Oran' },
   { code: '32', nom: 'El Bayadh' },
   { code: '33', nom: 'Illizi' },
-  { code: '34', nom: 'Bordj Bou Arréridj' },
-  { code: '35', nom: 'Boumerdès' },
+  { code: '34', nom: 'Bordj Bou Arreridj' },
+  { code: '35', nom: 'Boumerdes' },
   { code: '36', nom: 'El Tarf' },
   { code: '37', nom: 'Tindouf' },
   { code: '38', nom: 'Tissemsilt' },
@@ -190,166 +173,148 @@ const WILAYAS = [
   { code: '41', nom: 'Souk Ahras' },
   { code: '42', nom: 'Tipaza' },
   { code: '43', nom: 'Mila' },
-  { code: '44', nom: 'Aïn Defla' },
-  { code: '45', nom: 'Naâma' },
-  { code: '46', nom: 'Aïn Témouchent' },
-  { code: '47', nom: 'Ghardaïa' },
+  { code: '44', nom: 'Ain Defla' },
+  { code: '45', nom: 'Naama' },
+  { code: '46', nom: 'Ain Temouchent' },
+  { code: '47', nom: 'Ghardaia' },
   { code: '48', nom: 'Relizane' },
   { code: '49', nom: 'Timimoun' },
   { code: '50', nom: 'Bordj Badji Mokhtar' },
   { code: '51', nom: 'Ouled Djellal' },
-  { code: '52', nom: 'Béni Abbès' },
+  { code: '52', nom: 'Beni Abbes' },
   { code: '53', nom: 'In Salah' },
   { code: '54', nom: 'In Guezzam' },
   { code: '55', nom: 'Touggourt' },
   { code: '56', nom: 'Djanet' },
-  { code: '57', nom: 'El M\'Ghair' },
+  { code: '57', nom: 'El MGhair' },
   { code: '58', nom: 'El Meniaa' }
 ];
 
 function chargerWilayas() {
-  const select = document.getElementById('wilaya');
+  const select = document.getElementById('champ-wilaya');
   WILAYAS.forEach(w => {
-    const option = document.createElement('option');
-    option.value = w.nom;
-    option.textContent = w.code + ' — ' + w.nom;
-    select.appendChild(option);
+    const opt    = document.createElement('option');
+    opt.value    = w.nom;
+    opt.textContent = w.code + ' — ' + w.nom;
+    select.appendChild(opt);
   });
-
-  // Mettre à jour livraison quand wilaya change
-  select.addEventListener('change', mettreAJourRecap);
 }
 
-// ═══════════════════════════════════════
-// QUANTITÉ
-// ═══════════════════════════════════════
-
-function changerQty(delta) {
-  quantite = Math.max(1, quantite + delta);
-  document.getElementById('quantite').textContent = quantite;
-  document.getElementById('recap-qty').textContent = quantite;
-  mettreAJourRecap();
-
-  // Pixel — si qty > 1 on track
-  if (typeof fbq !== 'undefined') {
-    fbq('track', 'AddToCart', {
-      value: getPrixFinal() * quantite,
-      currency: 'DZD'
-    });
-  }
-}
-
-// ═══════════════════════════════════════
-// RECAP COMMANDE
-// ═══════════════════════════════════════
-
-function getPrixFinal() {
-  if (PRODUIT.prix_promo) return parseInt(PRODUIT.prix_promo);
-  if (PRODUIT.prix) return parseInt(PRODUIT.prix);
-  return 0;
-}
-
-function getLivraison(wilaya) {
-  if (!SETTINGS.tarifs_livraison) return 0;
-  return SETTINGS.tarifs_livraison[wilaya] || SETTINGS.tarifs_livraison['defaut'] || 0;
-}
+// ================================================================
+// RECAP
+// ================================================================
 
 function mettreAJourRecap() {
-  const wilaya = document.getElementById('wilaya')?.value || '';
+  const wilaya   = document.getElementById('champ-wilaya').value;
   const livraison = getLivraison(wilaya);
-  const prixUnitaire = getPrixFinal();
-  const total = (prixUnitaire * quantite) + livraison;
+  const prix      = getPrixFinal();
+  const total     = prix * quantite + livraison;
 
-  document.getElementById('recap-qty').textContent = quantite;
-  document.getElementById('recap-livraison').textContent = livraison === 0 ? 'Gratuite 🎉' : livraison + ' DA';
-  document.getElementById('recap-total').textContent = total + ' DA';
+  document.getElementById('recap-produit-val').textContent =
+    (prix * quantite).toLocaleString('fr-DZ') + ' DA';
+  document.getElementById('recap-qty-val').textContent = quantite;
+  document.getElementById('recap-livraison-val').textContent =
+    livraison === 0 ? 'Gratuite' : livraison.toLocaleString('fr-DZ') + ' DA';
+  document.getElementById('recap-total-val').textContent =
+    total.toLocaleString('fr-DZ') + ' DA';
 
-  // Pixel InitiateCheckout
-  if (wilaya && typeof fbq !== 'undefined') {
-    fbq('track', 'InitiateCheckout', {
-      value: total,
-      currency: 'DZD',
-      num_items: quantite
-    });
-  }
+  // Afficher recap si wilaya choisie
+  const recap = document.getElementById('order-summary');
+  recap.style.display = wilaya ? 'block' : 'none';
+
+  // Pixel
+  if (wilaya) pixel('InitiateCheckout', { value: total, num_items: quantite });
 }
 
-// ═══════════════════════════════════════
-// SCROLL VERS FORMULAIRE
-// ═══════════════════════════════════════
+// ================================================================
+// EVENTS
+// ================================================================
 
-function scrollFormulaire() {
-  document.getElementById('formulaire-section').scrollIntoView({
-    behavior: 'smooth'
+function bindEvents() {
+
+  // Quantite
+  document.getElementById('btn-moins').addEventListener('click', () => {
+    if (quantite <= 1) return;
+    quantite--;
+    document.getElementById('champ-quantite').value = quantite;
+    mettreAJourRecap();
   });
 
-  // Pixel ViewContent
-  if (typeof fbq !== 'undefined') {
-    fbq('track', 'ViewContent', {
-      value: getPrixFinal(),
-      currency: 'DZD',
-      content_name: PRODUIT.nom || 'Produit'
-    });
-  }
+  document.getElementById('btn-plus').addEventListener('click', () => {
+    quantite++;
+    document.getElementById('champ-quantite').value = quantite;
+    mettreAJourRecap();
+    pixel('AddToCart', { value: getPrixFinal() * quantite });
+  });
+
+  // Wilaya
+  document.getElementById('champ-wilaya').addEventListener('change', mettreAJourRecap);
+
+  // Formulaire
+  document.getElementById('formulaire').addEventListener('submit', soumettreCommande);
 }
 
-// ═══════════════════════════════════════
-// VALIDATION FORMULAIRE
-// ═══════════════════════════════════════
+// ================================================================
+// VALIDATION
+// ================================================================
 
-function validerFormulaire() {
-  const nom = document.getElementById('nom').value.trim();
-  const tel = document.getElementById('telephone').value.trim();
-  const wilaya = document.getElementById('wilaya').value;
-  const honeypot = document.querySelector('.honeypot').value;
+function valider() {
+  const prenom   = document.getElementById('champ-prenom').value.trim();
+  const nom      = document.getElementById('champ-nom').value.trim();
+  const tel      = document.getElementById('champ-telephone').value.trim();
+  const wilaya   = document.getElementById('champ-wilaya').value;
+  const honeypot = document.querySelector('input[name="website"]').value;
 
-  // Anti-bot
   if (honeypot) return false;
 
-  if (!nom || nom.length < 3) {
-    alert('Veuillez entrer votre nom complet.');
+  if (!prenom || prenom.length < 2) {
+    alert('Veuillez entrer votre prenom.');
     return false;
   }
 
-  if (!tel || !/^(05|06|07)[0-9]{8}$/.test(tel)) {
-    alert('Numéro de téléphone invalide. Format : 05XXXXXXXX');
+  if (!nom || nom.length < 2) {
+    alert('Veuillez entrer votre nom.');
+    return false;
+  }
+
+  if (!tel || !/^(05|06|07)[0-9]{8}$/.test(tel.replace(/\s/g, ''))) {
+    alert('Numero de telephone invalide. Format : 05XXXXXXXX');
     return false;
   }
 
   if (!wilaya) {
-    alert('Veuillez sélectionner votre wilaya.');
+    alert('Veuillez selectionner votre wilaya.');
     return false;
   }
 
   return true;
 }
 
-// ═══════════════════════════════════════
-// SOUMISSION COMMANDE
-// ═══════════════════════════════════════
+// ================================================================
+// SOUMISSION
+// ================================================================
 
-async function soumettreCommande(event) {
-  event.preventDefault();
+async function soumettreCommande(e) {
+  e.preventDefault();
+  if (!valider()) return;
 
-  if (!validerFormulaire()) return;
+  const btn = document.getElementById('btn-submit');
+  btn.disabled    = true;
+  btn.textContent = 'Envoi en cours...';
 
-  const btn = document.querySelector('.btn-submit');
-  btn.disabled = true;
-  btn.textContent = '⏳ Envoi en cours...';
-
-  const nom = document.getElementById('nom').value.trim();
-  const tel = document.getElementById('telephone').value.trim();
-  const wilaya = document.getElementById('wilaya').value;
-  const adresse = document.getElementById('adresse').value.trim();
+  const prenom   = document.getElementById('champ-prenom').value.trim();
+  const nom      = document.getElementById('champ-nom').value.trim();
+  const tel      = document.getElementById('champ-telephone').value.trim();
+  const wilaya   = document.getElementById('champ-wilaya').value;
   const livraison = getLivraison(wilaya);
-  const total = (getPrixFinal() * quantite) + livraison;
+  const total     = getPrixFinal() * quantite + livraison;
 
   const commande = {
+    prenom,
     nom,
-    telephone: tel,
+    telephone:    tel,
     wilaya,
-    adresse,
-    produit: PRODUIT.nom || 'Produit',
+    produit:      PRODUIT.nom || '',
     quantite,
     prix_unitaire: getPrixFinal(),
     livraison,
@@ -358,50 +323,46 @@ async function soumettreCommande(event) {
   };
 
   try {
-    // Envoi vers Netlify Function (clés cachées)
     const res = await fetch('/.netlify/functions/commande', {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(commande)
+      body:    JSON.stringify(commande)
     });
 
-    if (res.ok) {
-      // Pixel Purchase ✅
-      if (typeof fbq !== 'undefined') {
-        fbq('track', 'Purchase', {
-          value: total,
-          currency: 'DZD',
-          num_items: quantite,
-          content_name: PRODUIT.nom || 'Produit'
-        });
-      }
+    if (!res.ok) throw new Error('Erreur serveur');
 
-      // Afficher confirmation
-      document.getElementById('formulaire').classList.add('hidden');
-      document.getElementById('confirmation').classList.remove('hidden');
-      document.getElementById('conf-nom').textContent = nom;
+    // Pixel Purchase
+    pixel('Purchase', { value: total, num_items: quantite });
 
-      // Scroll confirmation
-      document.getElementById('confirmation').scrollIntoView({
-        behavior: 'smooth'
-      });
-
-    } else {
-      throw new Error('Erreur serveur');
-    }
+    // Afficher confirmation
+    document.getElementById('page-principale').style.display  = 'none';
+    const confEl = document.getElementById('page-confirmation');
+    confEl.style.display = 'flex';
+    document.getElementById('conf-prenom').textContent    = prenom;
+    document.getElementById('conf-telephone').textContent = tel;
 
   } catch (err) {
-    btn.disabled = false;
-    btn.textContent = '✅ Confirmer ma commande';
-    alert('Une erreur est survenue. Veuillez réessayer.');
+    btn.disabled    = false;
+    btn.textContent = 'Valider la commande';
+    alert('Une erreur est survenue. Veuillez reessayer.');
   }
 }
 
-// ═══════════════════════════════════════
-// INITIALISATION
-// ═══════════════════════════════════════
+// ================================================================
+// PIXEL HELPER
+// ================================================================
 
-document.addEventListener('DOMContentLoaded', async () => {
-  await chargerSettings();
-  await chargerProduit();
-});
+function pixel(event, params = {}) {
+  if (typeof fbq === 'undefined') return;
+  fbq('track', event, {
+    currency: 'DZD',
+    content_name: PRODUIT.nom || '',
+    ...params
+  });
+}
+
+// ================================================================
+// INIT
+// ================================================================
+
+document.addEventListener('DOMContentLoaded', chargerDonnees);

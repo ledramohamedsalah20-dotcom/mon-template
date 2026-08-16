@@ -1,8 +1,8 @@
 {
-  "nom": "Nom du produit",
-  "description": "Description de votre produit. Mettez en avant les bénéfices, les ingrédients, ou les caractéristiques principales.",
-  "prix": 2500,
-  "prix_promo": "",
-  "badge": "Nouveauté",
+  "nom": "Montre Classique Homme",
+  "accroche": "Elegance et precision pour chaque moment.",
+  "description": "Boitier en acier inoxydable 316L.\nVerre saphir anti-rayures.\nEtanche jusqu'a 50 metres.\nMouvement japonais Miyota.",
+  "prix": 4500,
+  "prix_promo": 3200,
   "images": []
 }
