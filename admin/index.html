@@ -1,12 +1,185 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src * data:; connect-src 'self' https://script.google.com;">
+  <title>Admin — Boutique DZ</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+
+  <!-- ═══════════ PAGE D'AUTHENTIFICATION ═══════════ -->
+  <div id="auth-section">
+    <div class="auth-container">
+      <div class="auth-logo">
+        <div class="logo-icon">🏪</div>
+        <h1>Boutique DZ Admin</h1>
+        <p>Espace administration sécurisé</p>
+      </div>
+
+      <!-- Formulaire Connexion -->
+      <div id="login-form" class="auth-form">
+        <h2>🔐 Connexion</h2>
+        <div id="login-error" class="error-msg"></div>
+        <form onsubmit="handleLogin(event)" autocomplete="off" novalidate>
+          <div class="form-group">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" placeholder="admin@example.com" required autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="login-password">Mot de passe</label>
+            <input type="password" id="login-password" placeholder="••••••••" required>
+          </div>
+          <button type="submit" id="login-btn" class="btn btn-primary" style="width:100%">Se connecter</button>
+        </form>
+        <div class="auth-switch">
+          Pas encore de compte ?
+          <button onclick="document.getElementById('login-form').classList.remove('active'); document.getElementById('register-form').classList.add('active')">Créer un compte</button>
+        </div>
+      </div>
+
+      <!-- Formulaire Création de compte -->
+      <div id="register-form" class="auth-form">
+        <h2>✨ Créer un compte admin</h2>
+        <div id="reg-error" class="error-msg"></div>
+        <form onsubmit="handleRegister(event)" autocomplete="off" novalidate>
+          <div class="form-group">
+            <label for="reg-email">Email admin autorisé</label>
+            <input type="email" id="reg-email" placeholder="admin@example.com" required autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="reg-password">Créer un mot de passe</label>
+            <input type="password" id="reg-password" placeholder="Minimum 8 caractères" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-confirm">Confirmer le mot de passe</label>
+            <input type="password" id="reg-confirm" placeholder="Répéter le mot de passe" required>
+          </div>
+          <button type="submit" id="reg-btn" class="btn btn-primary" style="width:100%">Créer le compte</button>
+        </form>
+        <div class="auth-switch">
+          Déjà un compte ?
+          <button onclick="document.getElementById('register-form').classList.remove('active'); document.getElementById('login-form').classList.add('active')">Se connecter</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ APPLICATION PRINCIPALE ═══════════ -->
+  <div id="app" style="display:none">
+
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <span class="brand-icon">🏪</span>
+          <div>
+            <div class="brand-name">Boutique DZ</div>
+            <div class="brand-sub">Admin Panel</div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-item active" data-nav="dashboard" onclick="navigateTo('dashboard')">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-label">Tableau de bord</span>
+        </div>
+        <div class="nav-item" data-nav="products" onclick="navigateTo('products')">
+          <span class="nav-icon">📦</span>
+          <span class="nav-label">Produits</span>
+        </div>
+        <div class="nav-item" data-nav="promotions" onclick="navigateTo('promotions')">
+          <span class="nav-icon">🏷️</span>
+          <span class="nav-label">Promotions</span>
+        </div>
+        <div class="nav-item" data-nav="delivery" onclick="navigateTo('delivery')">
+          <span class="nav-icon">🚚</span>
+          <span class="nav-label">Livraisons</span>
+        </div>
+        <div class="nav-item" data-nav="orders" onclick="navigateTo('orders')">
+          <span class="nav-icon">📋</span>
+          <span class="nav-label">Commandes</span>
+        </div>
+        <div class="nav-item" data-nav="settings" onclick="navigateTo('settings')">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-label">Paramètres</span>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">👤</div>
+          <div>
+            <div class="user-name">Admin</div>
+            <div class="user-role">Administrateur</div>
+          </div>
+        </div>
+        <button class="btn btn-outline" style="width:100%" onclick="Auth.logout()">🚪 Déconnexion</button>
+      </div>
+    </aside>
+
+    <!-- Contenu principal -->
+    <div id="main-content">
+      <header class="topbar">
+        <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+        <span class="topbar-title">Dashboard Admin</span>
+        <div class="topbar-right">
+          <button class="logout-btn" onclick="Auth.logout()">🚪 Déconnexion</button>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <!-- Tableau de bord -->
+        <div id="dashboard-section" class="section active"></div>
+
+        <!-- Produits -->
+        <div id="products-section" class="section"></div>
+
+        <!-- Promotions -->
+        <div id="promotions-section" class="section"></div>
+
+        <!-- Livraisons -->
+        <div id="delivery-section" class="section"></div>
+
+        <!-- Commandes -->
+        <div id="orders-section" class="section"></div>
+
+        <!-- Paramètres -->
+        <div id="settings-section" class="section"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Overlay modal partagé -->
+  <div id="modal-overlay" onclick="handleModalClick(event)"></div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast toast-success" role="status" aria-live="polite"></div>
+
+  <!-- ═══════════ SCRIPTS ═══════════ -->
+  <!-- DOMPurify pour la sanitisation XSS -->
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"
+          integrity="sha384-5/4Q2M1bKP+K3U2aMLlJD9BXPN7JRuJ9R1nW0Pr6+5TmpDNRVB3HXKS1tKr+tSX"
+          crossorigin="anonymous"></script>
+
+  <!-- Modules admin -->
+  <script src="auth.js"></script>
+  <script src="products.js"></script>
+  <script src="promotions.js"></script>
+  <script src="delivery.js"></script>
+  <script src="orders.js"></script>
+  <script src="script.js"></script>
+
+  <script>
+    // Fermer le modal en cliquant sur l'overlay
+    function handleModalClick(e) {
+      if (e.target === document.getElementById('modal-overlay')) {
+        document.getElementById('modal-overlay').classList.remove('visible');
+      }
+    }
+  </script>
 </body>
 </html>
