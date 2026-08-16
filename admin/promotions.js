@@ -57,9 +57,9 @@ const Promotions = (() => {
           <tr>
             <td>${window.Auth.sanitize(p.nom)}</td>
             <td><code class="code-badge">${window.Auth.sanitize(p.code)}</code></td>
-            <td>${p.reduction}%</td>
-            <td>${p.dateDebut}</td>
-            <td>${p.dateFin}</td>
+            <td>${Number(p.reduction)}%</td>
+            <td>${window.Auth.sanitize(p.dateDebut)}</td>
+            <td>${window.Auth.sanitize(p.dateFin)}</td>
             <td>${p.portee === 'boutique' ? '🏪 Boutique entière' : '📦 ' + window.Auth.sanitize(p.portee)}</td>
             <td>
               <span class="status-badge ${p.actif && !expired ? 'active' : 'inactive'}">
@@ -67,10 +67,10 @@ const Promotions = (() => {
               </span>
             </td>
             <td class="actions">
-              <button class="btn btn-sm ${p.actif ? 'btn-warning' : 'btn-success'}" onclick="Promotions.toggle('${p.id}')">
+              <button class="btn btn-sm ${p.actif ? 'btn-warning' : 'btn-success'}" onclick="Promotions.toggle('${window.Auth.sanitize(p.id)}')">
                 ${p.actif ? '⏸ Désactiver' : '▶ Activer'}
               </button>
-              <button class="btn btn-sm btn-danger" onclick="Promotions.remove('${p.id}')">🗑️</button>
+              <button class="btn btn-sm btn-danger" onclick="Promotions.remove('${window.Auth.sanitize(p.id)}')">🗑️</button>
             </td>
           </tr>`;
       });

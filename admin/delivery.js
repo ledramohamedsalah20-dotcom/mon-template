@@ -129,7 +129,7 @@ const Delivery = (() => {
           </thead>
           <tbody id="wilayas-tbody">`;
 
-    wilayas.forEach((w, i) => {
+    wilayas.forEach(w => {
       html += `
         <tr data-wilaya="${w.code}">
           <td>${w.code}</td>

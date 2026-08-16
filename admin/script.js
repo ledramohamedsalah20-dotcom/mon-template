@@ -142,7 +142,8 @@ async function changePassword() {
 
   const account = JSON.parse(localStorage.getItem('admin_account') || '{}');
   // Hachage via SubtleCrypto
-  const msgBuffer = new TextEncoder().encode(newPass);
+  const safePass = window.Auth.sanitize(newPass);
+  const msgBuffer = new TextEncoder().encode(safePass);
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
