@@ -1,0 +1,23 @@
+{
+  "nom_site": "Mon Site",
+  "logo": "",
+  "couleur_principale": "#3B82F6",
+  "couleur_secondaire": "#1D4ED8",
+  "pixel_id": "",
+  "banniere_active": false,
+  "banniere_texte": "🚚 Livraison gratuite !",
+  "footer_texte": "© 2026 Mon Site. Tous droits réservés.",
+  "tarifs_livraison": {
+    "defaut": 400,
+    "Alger": 300,
+    "Oran": 350,
+    "Constantine": 350,
+    "Blida": 300,
+    "Annaba": 400,
+    "Sétif": 400,
+    "Tizi Ouzou": 350,
+    "Béjaïa": 400,
+    "Boumerdès": 300,
+    "Tipaza": 350
+  }
+}

@@ -1,0 +1,67 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: images
+public_folder: /images
+
+locale: fr
+
+collections:
+
+  # ═══════════════════════════════════
+  # PARAMÈTRES DU SITE
+  # ═══════════════════════════════════
+  - name: settings
+    label: "⚙️ Paramètres du site"
+    files:
+      - name: general
+        label: "Général"
+        file: content/settings.json
+        fields:
+          - { label: "Nom du site", name: nom_site, widget: string }
+          - { label: "Logo", name: logo, widget: image, required: false }
+          - { label: "Couleur principale", name: couleur_principale, widget: color, default: "#3B82F6" }
+          - { label: "Couleur secondaire", name: couleur_secondaire, widget: color, default: "#1D4ED8" }
+          - { label: "Meta Pixel ID", name: pixel_id, widget: string, required: false, hint: "Ton identifiant Meta Pixel Facebook" }
+          - { label: "Activer la bannière", name: banniere_active, widget: boolean, default: false }
+          - { label: "Texte bannière", name: banniere_texte, widget: string, default: "🚚 Livraison gratuite !" }
+          - { label: "Texte footer", name: footer_texte, widget: string }
+          - label: "Tarifs livraison (DA)"
+            name: tarifs_livraison
+            widget: object
+            fields:
+              - { label: "Tarif par défaut", name: defaut, widget: number, default: 400 }
+              - { label: "Alger", name: Alger, widget: number, default: 300 }
+              - { label: "Oran", name: Oran, widget: number, default: 350 }
+              - { label: "Constantine", name: Constantine, widget: number, default: 350 }
+              - { label: "Blida", name: Blida, widget: number, default: 300 }
+              - { label: "Annaba", name: Annaba, widget: number, default: 400 }
+              - { label: "Sétif", name: Setif, widget: number, default: 400 }
+              - { label: "Tizi Ouzou", name: "Tizi Ouzou", widget: number, default: 350 }
+              - { label: "Béjaïa", name: Bejaia, widget: number, default: 400 }
+              - { label: "Boumerdès", name: Boumerdes, widget: number, default: 300 }
+              - { label: "Tipaza", name: Tipaza, widget: number, default: 350 }
+
+  # ═══════════════════════════════════
+  # PRODUITS
+  # ═══════════════════════════════════
+  - name: produits
+    label: "🛍️ Produits"
+    files:
+      - name: produit1
+        label: "Produit principal"
+        file: content/produits/produit-1.json
+        fields:
+          - { label: "Nom du produit", name: nom, widget: string }
+          - { label: "Description", name: description, widget: text }
+          - { label: "Prix (DA)", name: prix, widget: number }
+          - { label: "Prix barré / avant promo (DA)", name: prix_promo, widget: number, required: false, hint: "Laisser vide si pas de promo" }
+          - { label: "Badge", name: badge, widget: string, required: false, hint: "ex: Nouveauté, Promo, Best-seller" }
+          - label: "Photos du produit"
+            name: images
+            widget: list
+            field:
+              label: "Photo"
+              name: image
+              widget: image

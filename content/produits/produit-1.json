@@ -1,0 +1,8 @@
+{
+  "nom": "Nom du produit",
+  "description": "Description de votre produit. Mettez en avant les bénéfices, les ingrédients, ou les caractéristiques principales.",
+  "prix": 2500,
+  "prix_promo": "",
+  "badge": "Nouveauté",
+  "images": []
+}
