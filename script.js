@@ -3,24 +3,35 @@
 // ================================================================
 
 let SETTINGS = {};
-let PRODUIT  = {};
+let PRODUITS = [];
+let PRODUIT_ACTIF = null;
 let quantite = 1;
 
 async function chargerDonnees() {
   try {
-    const [resSettings, resProduit] = await Promise.all([
-      fetch('/content/settings.json'),
-      fetch('/content/produits/produit-1.json')
-    ]);
+    const resSettings = await fetch('/content/settings.json');
     SETTINGS = await resSettings.json();
-    PRODUIT  = await resProduit.json();
+
+    const resListe = await fetch('/.netlify/functions/liste-produits');
+    const { fichiers } = await resListe.json();
+
+    const produitsCharges = await Promise.all(
+      fichiers.map(async nomFichier => {
+        const res = await fetch(`/content/produits/${nomFichier}`);
+        const data = await res.json();
+        return { ...data, _fichier: nomFichier };
+      })
+    );
+
+    PRODUITS = produitsCharges.filter(p => p.actif !== false);
+
   } catch (e) {
     console.warn('Erreur chargement données', e);
   }
 
   appliquerSettings();
-  appliquerProduit();
   chargerWilayas();
+  afficherListeProduits();
   bindEvents();
 }
 
@@ -40,81 +51,115 @@ function appliquerSettings() {
 }
 
 // ================================================================
-// PRODUIT
+// LISTE DES PRODUITS
 // ================================================================
 
-function appliquerProduit() {
-  // Nom
-  const nom = PRODUIT.nom || '';
-  document.getElementById('product-name').textContent = nom;
-  document.getElementById('recap-produit-label').textContent = nom;
+function afficherListeProduits() {
+  const conteneur = document.getElementById('liste-produits');
+  conteneur.innerHTML = '';
 
-  // Accroche
-  if (PRODUIT.accroche) {
-    document.getElementById('product-tagline').textContent = PRODUIT.accroche;
+  if (PRODUITS.length === 0) {
+    conteneur.innerHTML = '<p>Aucun produit disponible pour le moment.</p>';
+    return;
   }
 
-  // Prix
-  const prix = getPrixFinal();
-  document.getElementById('product-price').textContent =
-    prix.toLocaleString('fr-DZ') + ' DA';
+  PRODUITS.forEach((produit, index) => {
+    const carte = document.createElement('article');
+    carte.className = 'carte-produit';
+    carte.dataset.index = index;
 
-  // Description
-  if (PRODUIT.description) {
-    const el = document.getElementById('product-description');
-    PRODUIT.description.split('\n').forEach(ligne => {
-      if (!ligne.trim()) return;
-      const p = document.createElement('p');
-      p.textContent = ligne;
-      el.appendChild(p);
+    const prixFinal = getPrixFinal(produit);
+    const aPromo = produit.prix_promo && produit.prix_promo > 0;
+
+    carte.innerHTML = `
+      <div class="carte-produit-image">
+        <img src="${(produit.images && produit.images[0]) || ''}" alt="${produit.nom || ''}" />
+      </div>
+      <div class="carte-produit-info">
+        ${produit.badge ? `<span class="badge">${produit.badge}</span>` : ''}
+        <h3>${produit.nom || ''}</h3>
+        ${produit.accroche ? `<p class="accroche">${produit.accroche}</p>` : ''}
+        <p class="prix">
+          ${prixFinal.toLocaleString('fr-DZ')} DA
+          ${aPromo ? `<span class="prix-barre">${parseInt(produit.prix).toLocaleString('fr-DZ')} DA</span>` : ''}
+        </p>
+        <button type="button" class="btn-commander" data-index="${index}">Commander</button>
+      </div>
+    `;
+
+    conteneur.appendChild(carte);
+  });
+
+  document.querySelectorAll('.btn-commander').forEach(btn => {
+    btn.addEventListener('click', () => ouvrirFormulaire(parseInt(btn.dataset.index)));
+  });
+}
+
+// ================================================================
+// OUVERTURE DU FORMULAIRE
+// ================================================================
+
+function ouvrirFormulaire(index) {
+  PRODUIT_ACTIF = PRODUITS[index];
+  quantite = 1;
+
+  document.getElementById('champ-quantite').value = 1;
+  document.getElementById('recap-produit-label').textContent = PRODUIT_ACTIF.nom || '';
+  document.getElementById('produit-nom-formulaire').textContent = PRODUIT_ACTIF.nom || '';
+
+  afficherGalerie(PRODUIT_ACTIF);
+
+  const section = document.getElementById('section-commande');
+  section.style.display = 'block';
+  section.scrollIntoView({ behavior: 'smooth' });
+
+  mettreAJourRecap();
+  pixel('ViewContent', { value: getPrixFinal(PRODUIT_ACTIF) });
+}
+
+function afficherGalerie(produit) {
+  const mainImg  = document.getElementById('gallery-main-img');
+  const thumbsEl = document.getElementById('gallery-thumbs');
+  thumbsEl.innerHTML = '';
+
+  if (!produit.images || produit.images.length === 0) return;
+
+  mainImg.src = produit.images[0];
+  mainImg.alt = produit.nom || '';
+
+  produit.images.forEach((src, i) => {
+    const btn = document.createElement('button');
+    btn.type      = 'button';
+    btn.className = 'thumb-btn' + (i === 0 ? ' active' : '');
+
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = (produit.nom || '') + ' ' + (i + 1);
+
+    btn.appendChild(img);
+    btn.addEventListener('click', () => {
+      mainImg.style.opacity = '0';
+      setTimeout(() => {
+        mainImg.src           = src;
+        mainImg.style.opacity = '1';
+      }, 150);
+      document.querySelectorAll('.thumb-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
     });
-  }
 
-  // Galerie
-  if (PRODUIT.images && PRODUIT.images.length > 0) {
-    const mainImg   = document.getElementById('gallery-main-img');
-    const thumbsEl  = document.getElementById('gallery-thumbs');
-
-    mainImg.src = PRODUIT.images[0];
-    mainImg.alt = nom;
-
-    PRODUIT.images.forEach((src, i) => {
-      const btn = document.createElement('button');
-      btn.type      = 'button';
-      btn.className = 'thumb-btn' + (i === 0 ? ' active' : '');
-
-      const img = document.createElement('img');
-      img.src = src;
-      img.alt = nom + ' ' + (i + 1);
-
-      btn.appendChild(img);
-      btn.addEventListener('click', () => {
-        mainImg.style.opacity = '0';
-        setTimeout(() => {
-          mainImg.src           = src;
-          mainImg.style.opacity = '1';
-        }, 150);
-        document.querySelectorAll('.thumb-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
-
-      thumbsEl.appendChild(btn);
-    });
-  }
-
-  // Recap produit valeur initiale
-  document.getElementById('recap-produit-val').textContent =
-    getPrixFinal().toLocaleString('fr-DZ') + ' DA';
-  document.getElementById('recap-qty-val').textContent = 1;
+    thumbsEl.appendChild(btn);
+  });
 }
 
 // ================================================================
 // PRIX
 // ================================================================
 
-function getPrixFinal() {
-  if (PRODUIT.prix_promo && PRODUIT.prix_promo > 0) return parseInt(PRODUIT.prix_promo);
-  if (PRODUIT.prix) return parseInt(PRODUIT.prix);
+function getPrixFinal(produit) {
+  const p = produit || PRODUIT_ACTIF;
+  if (!p) return 0;
+  if (p.prix_promo && p.prix_promo > 0) return parseInt(p.prix_promo);
+  if (p.prix) return parseInt(p.prix);
   return 0;
 }
 
@@ -193,8 +238,8 @@ const WILAYAS = [
 function chargerWilayas() {
   const select = document.getElementById('champ-wilaya');
   WILAYAS.forEach(w => {
-    const opt    = document.createElement('option');
-    opt.value    = w.nom;
+    const opt = document.createElement('option');
+    opt.value = w.nom;
     opt.textContent = w.code + ' — ' + w.nom;
     select.appendChild(opt);
   });
@@ -205,9 +250,11 @@ function chargerWilayas() {
 // ================================================================
 
 function mettreAJourRecap() {
-  const wilaya   = document.getElementById('champ-wilaya').value;
+  if (!PRODUIT_ACTIF) return;
+
+  const wilaya    = document.getElementById('champ-wilaya').value;
   const livraison = getLivraison(wilaya);
-  const prix      = getPrixFinal();
+  const prix      = getPrixFinal(PRODUIT_ACTIF);
   const total     = prix * quantite + livraison;
 
   document.getElementById('recap-produit-val').textContent =
@@ -218,11 +265,9 @@ function mettreAJourRecap() {
   document.getElementById('recap-total-val').textContent =
     total.toLocaleString('fr-DZ') + ' DA';
 
-  // Afficher recap si wilaya choisie
   const recap = document.getElementById('order-summary');
   recap.style.display = wilaya ? 'block' : 'none';
 
-  // Pixel
   if (wilaya) pixel('InitiateCheckout', { value: total, num_items: quantite });
 }
 
@@ -232,7 +277,6 @@ function mettreAJourRecap() {
 
 function bindEvents() {
 
-  // Quantite
   document.getElementById('btn-moins').addEventListener('click', () => {
     if (quantite <= 1) return;
     quantite--;
@@ -244,13 +288,11 @@ function bindEvents() {
     quantite++;
     document.getElementById('champ-quantite').value = quantite;
     mettreAJourRecap();
-    pixel('AddToCart', { value: getPrixFinal() * quantite });
+    pixel('AddToCart', { value: getPrixFinal(PRODUIT_ACTIF) * quantite });
   });
 
-  // Wilaya
   document.getElementById('champ-wilaya').addEventListener('change', mettreAJourRecap);
 
-  // Formulaire
   document.getElementById('formulaire').addEventListener('submit', soumettreCommande);
 }
 
@@ -266,6 +308,11 @@ function valider() {
   const honeypot = document.querySelector('input[name="website"]').value;
 
   if (honeypot) return false;
+
+  if (!PRODUIT_ACTIF) {
+    alert('Veuillez selectionner un produit.');
+    return false;
+  }
 
   if (!prenom || prenom.length < 2) {
     alert('Veuillez entrer votre prenom.');
@@ -302,21 +349,21 @@ async function soumettreCommande(e) {
   btn.disabled    = true;
   btn.textContent = 'Envoi en cours...';
 
-  const prenom   = document.getElementById('champ-prenom').value.trim();
-  const nom      = document.getElementById('champ-nom').value.trim();
-  const tel      = document.getElementById('champ-telephone').value.trim();
-  const wilaya   = document.getElementById('champ-wilaya').value;
+  const prenom    = document.getElementById('champ-prenom').value.trim();
+  const nom       = document.getElementById('champ-nom').value.trim();
+  const tel       = document.getElementById('champ-telephone').value.trim();
+  const wilaya    = document.getElementById('champ-wilaya').value;
   const livraison = getLivraison(wilaya);
-  const total     = getPrixFinal() * quantite + livraison;
+  const total     = getPrixFinal(PRODUIT_ACTIF) * quantite + livraison;
 
   const commande = {
     prenom,
     nom,
-    telephone:    tel,
+    telephone:     tel,
     wilaya,
-    produit:      PRODUIT.nom || '',
+    produit:       PRODUIT_ACTIF.nom || '',
     quantite,
-    prix_unitaire: getPrixFinal(),
+    prix_unitaire: getPrixFinal(PRODUIT_ACTIF),
     livraison,
     total,
     date: new Date().toLocaleDateString('fr-DZ')
@@ -331,11 +378,9 @@ async function soumettreCommande(e) {
 
     if (!res.ok) throw new Error('Erreur serveur');
 
-    // Pixel Purchase
     pixel('Purchase', { value: total, num_items: quantite });
 
-    // Afficher confirmation
-    document.getElementById('page-principale').style.display  = 'none';
+    document.getElementById('page-principale').style.display = 'none';
     const confEl = document.getElementById('page-confirmation');
     confEl.style.display = 'flex';
     document.getElementById('conf-prenom').textContent    = prenom;
@@ -356,7 +401,7 @@ function pixel(event, params = {}) {
   if (typeof fbq === 'undefined') return;
   fbq('track', event, {
     currency: 'DZD',
-    content_name: PRODUIT.nom || '',
+    content_name: (PRODUIT_ACTIF && PRODUIT_ACTIF.nom) || '',
     ...params
   });
 }

@@ -1,12 +1,124 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="fr">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin</title>
+  <title id="site-title">Boutique</title>
+
+  <!-- Meta Pixel -->
+  <script>
+    !function(f,b,e,v,n,t,s){
+      if(f.fbq)return;n=f.fbq=function(){
+        n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)
+      };
+      if(!f._fbq)f._fbq=n;
+      n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)
+    }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('track','PageView');
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+
+  <div id="page-principale" class="page">
+    <div class="conteneur">
+
+      <section id="liste-produits" class="liste-produits">
+        <!-- Cartes produits générées par script.js -->
+      </section>
+
+      <section id="section-commande" class="section-commande" style="display:none;">
+        <h2 id="produit-nom-formulaire"></h2>
+
+        <div class="galerie">
+          <div class="galerie-principale">
+            <img id="gallery-main-img" src="" alt="" />
+          </div>
+          <div id="gallery-thumbs" class="galerie-thumbs"></div>
+        </div>
+
+        <form id="formulaire" novalidate>
+          <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" />
+
+          <div class="grille-formulaire">
+            <div class="champ">
+              <label for="champ-prenom">Prenom</label>
+              <input id="champ-prenom" name="prenom" type="text" autocomplete="given-name" placeholder="Votre prenom" required />
+            </div>
+
+            <div class="champ">
+              <label for="champ-nom">Nom</label>
+              <input id="champ-nom" name="nom" type="text" autocomplete="family-name" placeholder="Votre nom" required />
+            </div>
+
+            <div class="champ pleine-largeur">
+              <label for="champ-telephone">Numero de telephone</label>
+              <input id="champ-telephone" name="telephone" type="tel" autocomplete="tel" placeholder="0X XX XX XX XX" pattern="[0-9\s\+]{9,15}" required />
+            </div>
+
+            <div class="champ pleine-largeur">
+              <label for="champ-wilaya">Wilaya de livraison</label>
+              <select id="champ-wilaya" name="wilaya" required></select>
+            </div>
+
+            <div class="champ">
+              <label for="champ-quantite">Quantite</label>
+              <div class="champ-quantite-wrapper">
+                <button type="button" class="btn-quantite" id="btn-moins" aria-label="Diminuer la quantite">-</button>
+                <input id="champ-quantite" name="quantite" type="number" min="1" value="1" required />
+                <button type="button" class="btn-quantite" id="btn-plus" aria-label="Augmenter la quantite">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="order-summary">
+            <div class="recap-ligne">
+              <span id="recap-produit-label"></span>
+              <span id="recap-produit-val"></span>
+            </div>
+            <div class="recap-ligne">
+              <span>Quantite</span>
+              <span id="recap-qty-val"></span>
+            </div>
+            <div class="recap-ligne">
+              <span>Livraison</span>
+              <span id="recap-livraison-val"></span>
+            </div>
+            <div class="recap-ligne total">
+              <span>Total a payer</span>
+              <span id="recap-total-val"></span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-valider" id="btn-submit">Valider la commande</button>
+
+          <p class="note-livraison">Paiement a la livraison — aucun paiement en ligne requis</p>
+        </form>
+      </section>
+
+    </div>
+  </div>
+
+  <div id="page-confirmation">
+    <div class="carte-confirmation">
+      <div class="icone-confirmation">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
+      </div>
+      <h2>Commande enregistree</h2>
+      <p>
+        Merci <strong id="conf-prenom"></strong>. Nous vous contacterons
+        au <strong id="conf-telephone"></strong> dans les plus brefs delais.
+      </p>
+    </div>
+  </div>
+
+  <script src="script.js" defer></script>
 </body>
 </html>
